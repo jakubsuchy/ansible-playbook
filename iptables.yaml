@@ -21,7 +21,7 @@
       ansible.builtin.iptables:
         flush: yes
 
-    - name: Firewall rule - allow all loopback traffic
+    - name: Allow all loopback traffic
       ansible.builtin.iptables:
         action: append
         chain: INPUT
@@ -35,7 +35,7 @@
         jump: ACCEPT
 
 
-    - name: Allow all port 22
+    - name: Allow all port 22 2222 80
       ansible.builtin.iptables:
         chain: INPUT
         protocol: tcp
