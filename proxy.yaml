@@ -1,0 +1,30 @@
+---
+
+- name: loadbalancers
+  hosts: lbs 
+
+  tasks:
+
+    - name: Install HAProxy
+      package:
+        name: haproxy
+
+    - name: Configure HAProxy
+      template:
+        src: templates/haproxy.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+        owner: root
+        group: root
+        mode: 0664
+
+    - name: Start HAProxy
+      service:
+        name: haproxy
+        state: started
+        enabled: yes
+
+    - name: Reload HAProxy
+      service:
+        name: haproxy
+        state: reloaded
+      when: not ansible_check_mode

@@ -1,0 +1,52 @@
+---
+ 
+- name: webs
+  hosts: webs
+
+  tasks:
+
+    - name: Install Apache
+      package:
+        name: apache2
+    
+    - name: Add default web user
+      user:
+        name: web
+        shell: /bin/fasle
+        home: /home/web
+        createhome: yes
+
+    - name: Create a directory if it does not exist
+      file:
+        path: /var/www/web
+        state: directory
+        mode: 0755
+
+    - name: Copy index test page
+      template:
+        src: "templates/index.html.j2"
+        dest: "/var/www/web/index.html"
+        owner: web
+        group: web
+        mode: 0755
+
+    - name: Set up Apache virtualhost
+      template:
+        src: "templates/apache.conf.j2"
+        dest: "/etc/apache2/sites-available/web.conf"
+
+
+    - name: Enable new site
+      shell: /usr/sbin/a2ensite web
+      notify: Reload Apache
+
+  handlers:
+    - name: Reload Apache
+      service:
+        name: apache2
+        state: reloaded
+
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted

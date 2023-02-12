@@ -1,0 +1,48 @@
+---
+
+- hosts: all
+  tasks:
+    - name: Add admin group
+      group:
+        name: admin
+        state: present
+
+    - name: Add admin user
+      user:
+        name: jimmy
+        group: admin
+        shell: /bin/bash
+        home: /home/jimmy
+        create_home: yes
+        state: present
+
+    - name: Add SSH public key for user
+      authorized_key:
+        user: jimmy
+        key: "{{ lookup('file', 'templates/authorized_key') }}"
+        state: present
+
+    - name: Add sudoer rule for admin user
+      copy:
+        dest: /etc/sudoers.d/jimmy
+        src: "templates/sudoers.admin"
+        owner: root
+        group: root
+        mode: 0440
+        validate: /usr/sbin/visudo -csf %s
+
+    - name: Add hardened SSH config
+      copy:
+        src: "templates/sshd_config"
+        dest: /etc/ssh/sshd_config
+        owner: root
+        group: root
+        mode: 0600
+      notify: Reload SSH
+      become: true
+
+  handlers:
+    - name: Reload SSH
+      service:
+        name: ssh
+        state: reloaded
