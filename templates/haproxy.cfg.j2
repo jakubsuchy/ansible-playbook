@@ -44,7 +44,7 @@ frontend webserver
   default_backend webs 
 #  http-request deny if { path -i -m beg /api/ }
 #  use_backend new if { path_beg /product }
-  http-request replace-header Host .* new.product.com if { path_beg /product }
+#  http-request replace-header Host .* new.product.com if { path_beg /product }
  
  
 
