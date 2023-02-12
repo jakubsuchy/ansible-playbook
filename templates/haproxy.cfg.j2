@@ -34,6 +34,11 @@ defaults
 	errorfile 504 /etc/haproxy/errors/504.http
 
 
+cache staticfiles
+    total-max-size 128   # MB
+    max-object-size 1000000 # bytes
+    max-age 30            # seconds
+
 frontend webserver 
   bind *:80
   default_backend webs 
@@ -41,9 +46,13 @@ frontend webserver
 #  use_backend new if { path_beg /product }
   http-request replace-header Host .* new.product.com if { path_beg /product }
  
+ 
 
 backend webs
-    balance     roundrobin
-    {% for i in groups.webs  %}
-    server  web{{ loop.index }} {{ i }}:80 check
-    {% endfor %}
+  http-request cache-use staticfiles
+  http-response cache-store staticfiles
+
+  balance     roundrobin
+  {% for i in groups.webs  %}
+  server  web{{ loop.index }} {{ i }}:80 check
+  {% endfor %}
