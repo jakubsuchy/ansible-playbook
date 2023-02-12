@@ -1,8 +1,8 @@
 ---
 
 
-- name: iptables-webs
-  hosts: webs
+- name: iptables
+  hosts: all
 
   tasks:
     - name: Update APT cache
