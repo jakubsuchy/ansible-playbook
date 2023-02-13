@@ -9,6 +9,12 @@
       package:
         name: haproxy
 
+    - name: Start HAProxy
+      service:
+        name: haproxy
+        state: started
+        enabled: yes
+
     - name: Configure HAProxy
       template:
         src: templates/haproxy.cfg.j2
@@ -16,16 +22,13 @@
         owner: root
         group: root
         mode: 0664
-      notify: Reload HAProxy
 
-    - name: Start HAProxy
-      service:
-        name: haproxy
-        state: started
-        enabled: yes
+    - name: Check for errors
+      command: "haproxy -c -f /etc/haproxy/haproxy.cfg"
+      register: error_check
 
-  handlers:
-    - name: Reload HAProxy
+    - name: Reload HAProxy Enterprise if the check passed
       service:
         name: haproxy
         state: reloaded
+      when: error_check is success and not ansible_check_mode
