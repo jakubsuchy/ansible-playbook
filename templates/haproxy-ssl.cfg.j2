@@ -41,7 +41,7 @@ cache staticfiles
 
 frontend webserver 
   bind *:80
-  bind *:443 ssl crt /etc/ssl/certs/test.com.pem
+  bind *:443 ssl crt /etc/ssl/certs/test.com.pem alpn h2,http/1.1
   default_backend webs 
 #  http-request deny if { path -i -m beg /api/ }
 #  use_backend new if { path_beg /product }
@@ -55,5 +55,6 @@ backend webs
 
   balance     roundrobin
   {% for i in groups.webs  %}
-  server  web{{ loop.index }} {{ i }}:80 check
+  server  web{{ loop.index }} {{ i }}:443 ssl alpn h2,http/1.1 verify none
+  #server  web{{ loop.index }} {{ i }}:80 proto h2
   {% endfor %}
