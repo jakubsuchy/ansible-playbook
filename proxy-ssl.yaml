@@ -1,0 +1,48 @@
+---
+
+- name: loadbalancers
+  hosts: loadbalancers
+
+  tasks:
+
+    - name: Install HAProxy
+      package:
+        name: haproxy
+
+    # This should be done via https://galaxy.ansible.com/community/crypto instead but I wanted to try manually
+    - name: Generate Private Key
+      ansible.builtin.command: openssl genrsa -out /etc/ssl/certs/mydomain.key 2048
+
+    - name: Create CSR
+      ansible.builtin.command: openssl req -new -key /etc/ssl/certs/mydomain.key -out /etc/ssl/certs/mydomain.csr -subj "/C=US/ST=New York/L=NYC/O=HAProxy/OU=SE/CN=mydomain.com"
+
+    - name: Create CRT
+      ansible.builtin.command: openssl x509 -req -days 365 -in /etc/ssl/certs/mydomain.csr -signkey /etc/ssl/certs/mydomain.key -out /etc/ssl/certs/mydomain.crt
+
+    - name: Create PEM
+      shell: cat /etc/ssl/certs/mydomain.key /etc/ssl/certs/mydomain.crt > /etc/ssl/certs/mydomain.pem
+
+    - name: Start HAProxy
+      service:
+        name: haproxy
+        state: started
+        enabled: yes
+
+    - name: Configure HAProxy
+      template:
+        src: templates/haproxy-ssl.cfg.j2
+        dest: /etc/haproxy/haproxy.cfg
+        owner: root
+        group: root
+        mode: 0664
+
+    - name: Check for errors
+      command: "haproxy -c -f /etc/haproxy/haproxy.cfg"
+      register: error_check
+
+    - name: Reload HAProxy Enterprise if the check passed
+      service:
+        name: haproxy
+        state: reloaded
+      when: error_check is success and not ansible_check_mode
+
